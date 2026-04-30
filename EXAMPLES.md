@@ -33,6 +33,7 @@ void RAM_BIST(void) {
 - Unbounded execution time — no maximum stated
 - Fault reaction is a silent hang, not a diagnosable report
 - Overwrites live data — no save/restore, no exclusion zone defined
+- Uses `0x20000000` as test data without separating it from the required RAM-executed BIST code region
 
 **✅ What should happen (surface assumptions)**
 
@@ -41,13 +42,16 @@ Before implementing, I need to clarify:
 
 1. Algorithm: March-C, March-X, Checkerboard, or other? (coverage vs time tradeoff)
 2. Scope: full SRAM or only a dedicated test section? (linker symbol or address range?)
-3. Phase: POST (before .data/.bss init) or PEST (periodic, with exclusions)?
-4. Timing constraint: maximum allowed execution time?
-5. Fault reaction: which reporting mechanism? (BIST_ResultTable[], SafeState_Enter(), reset?)
-6. Intrusive: is it acceptable to temporarily corrupt SRAM during the test?
+3. Execution placement: which linker/section mechanism places BIST code in RAM at 0x20000000?
+4. Data exclusions: which SRAM ranges contain BIST code, stack, .data/.bss, DMA buffers, or retained state?
+5. Phase: POST (before .data/.bss init) or PEST (periodic, with exclusions)?
+6. Timing constraint: maximum allowed execution time?
+7. Fault reaction: which reporting mechanism? (BIST_ResultTable[], SafeState_Enter(), reset?)
+8. Intrusive: is it acceptable to temporarily corrupt SRAM during the test?
 
 Simplest safe starting point: a bounded checkerboard test on a dedicated .bist_ram section,
-reporting to BIST_ResultTable[BIST_ID_RAM].
+with BIST code placed in RAM at 0x20000000 and the tested data range excluded from code,
+stack, .data/.bss, DMA buffers, and retained state, reporting to BIST_ResultTable[BIST_ID_RAM].
 ```
 
 ---

@@ -20,6 +20,7 @@ Before implementing:
 
 **STM32-specific:**
 - If the exact STM32 family (H7, G4, U5, H5, WB, ...) is not specified, ask before writing any register-level or clock/IRQ/DMA code.
+- For internal or unpublished STM32 products, locate or ask for the internal product document and product driver library before selecting ADC, DAC, timer, DMA, trigger, or analog routing details.
 - If the HAL/LL/register access policy is not stated, ask before mixing layers.
 - If the BIST architecture (POST, PEST, on-demand, safety level, fault reaction) is not described, ask before writing test logic.
 
@@ -90,6 +91,8 @@ For multi-step tasks, state a brief plan:
 **BIST-specific success criteria:**
 - Test is deterministic: same input → same result every time.
 - Test is bounded: maximum execution time is stated and measurable.
+- Execution placement is verified: BIST code runs from RAM at base address `0x20000000`.
+- Memory use is static or bounded stack-based only; dynamic allocation is forbidden.
 - Fault is diagnosable: detected fault is reported (not silently ignored, not auto-cleared, not retried without specification).
 - Safety assumptions are explicit: any assumption about hardware state, interrupt masking, or resource exclusivity is written in code or comments.
 - Validation is on-target: if validation was done only in simulation, state that explicitly.
@@ -100,8 +103,12 @@ For multi-step tasks, state a brief plan:
 
 **Never guess. Never invent. Reference the source of truth.**
 
-- Never invent register names, bitfield names, reset values, or initialization sequences. Always reference the correct Reference Manual (RM) and Datasheet (DS) for the target family.
+- Never invent register names, bitfield names, reset values, peripheral instance names, trigger routes, DMA mappings, or initialization sequences.
+- For published products, reference the correct Reference Manual (RM) and Datasheet (DS) for the target family. For internal or unpublished products, treat the internal product document and project driver library as the source of truth.
+- Use the product driver library already present in the project. Do not bypass it with HAL, LL, or raw register access unless the project policy explicitly allows that layer for the module.
 - Never mix HAL, LL, and raw register access within the same module without an explicit architectural justification.
+- All BIST code must execute from RAM at base address `0x20000000`; if linker/startup/section placement support is missing, ask before modifying those files.
+- Do not use dynamic memory allocation (`malloc`, `calloc`, `realloc`, `free`, `new`, `delete`) in BIST code.
 - Every change to DMA, IRQ, clock, Flash, or low-power must document side effects on other subsystems.
 - No blocking code, heap allocation (`malloc`/`new`), or complex logic inside ISRs.
 - Always check if a peripheral clock is enabled before accessing its registers.
@@ -115,6 +122,8 @@ For multi-step tasks, state a brief plan:
 
 - **Deterministic:** A BIST must produce the same result for the same hardware state. Non-determinism is a defect.
 - **Bounded:** Every BIST must have a stated maximum execution time. Unbounded loops are not acceptable.
+- **RAM-executed:** Every BIST must execute from RAM at base address `0x20000000`; Flash execution is not acceptable unless the architecture is explicitly revised.
+- **No dynamic allocation:** BIST code must not use `malloc`, `calloc`, `realloc`, `free`, `new`, or `delete`; use static storage or bounded stack usage only.
 - **Diagnosable:** Every detected fault must be reported through the defined reporting mechanism. Never mask, auto-clear, or silently retry a fault unless that behavior is explicitly specified.
 - **Typed:** Clearly separate POST (power-on self-test), PEST (periodic self-test), and on-demand test. Do not merge their execution paths.
 - **Intrusive tests:** If a test temporarily monopolizes a resource or modifies hardware state, document: resource locked, duration upper bound, system exclusions, and recovery/restore procedure.

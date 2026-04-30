@@ -17,17 +17,43 @@ This repository provides instruction files for GitHub Copilot (VS Code), Cursor,
 - On-Demand Self-Test
 - Safety-critical diagnostics (IEC 61508, ISO 26262 context)
 - Embedded hardware diagnostics (RAM, Flash, CPU, Clock, Watchdog, Peripherals)
+- BIST execution from RAM at base address `0x20000000`
+- Internal or unpublished STM32 products where the product document and driver library are the source of truth
 
 ---
 
-## The Four Layers
+## The Five Layers
 
 | Layer | File | Scope |
 |-------|------|-------|
 | Agent behavior | `CLAUDE.md` | All tools (Claude, Cursor, VS Code) |
 | VS Code / GitHub Copilot | `.github/copilot-instructions.md` | VS Code Copilot Chat + Agents |
+| VS Code custom agent | `.github/agents/stm32-bist-orchestrator.agent.md` | End-to-end BIST pipeline orchestration |
 | Cursor | `.cursor/rules/stm32-bist-guidelines.mdc` | Cursor editor |
 | Reusable skill | `skills/stm32-bist/SKILL.md` | Claude Code plugin / skill |
+
+---
+
+## BIST Pipelines
+
+| Pipeline | Purpose |
+|----------|---------|
+| [`Pepline_ADC_SINGLE_AC_BIST.md`](Pepline_ADC_SINGLE_AC_BIST.md) | ADC dynamic performance BIST using DAC sine generation, synchronized ADC capture, DMA, CMSIS-DSP FFT, SNR, THD, SINAD, and ENOB. |
+
+---
+
+## BIST Orchestrator Agent
+
+Use the workspace custom agent [`STM32 BIST Orchestrator`](.github/agents/stm32-bist-orchestrator.agent.md) when you want Copilot to drive a complete BIST workflow:
+
+- select a pipeline document
+- collect internal product documentation and product driver library context
+- generate or modify firmware code
+- add focused tests or validation assets
+- update implementation documentation
+- produce a BIST result report
+
+The orchestrator must not implement hardware details until the selected pipeline, internal product document, driver APIs, BIST phase, reporting mechanism, fault reaction, and RAM execution mechanism are known.
 
 ---
 
@@ -43,8 +69,12 @@ This repository provides instruction files for GitHub Copilot (VS Code), Cursor,
 ### STM32 Platform Hard Rules
 
 - Never modify startup, linker, clock tree, watchdog, MPU/cache, option bytes, IRQ priorities, or low-power sequences without an explicit request and justification.
-- Never invent register names, bitfield values, reset states, or initialization sequences. Always reference the correct RM/DS for the target family.
+- Never invent register names, bitfield values, reset states, peripheral instance names, trigger routes, DMA mappings, or initialization sequences.
+- For published products, reference the correct RM/DS for the target family. For internal or unpublished products, treat the internal product document and project driver library as the source of truth.
+- Use the product driver library already present in the project. Do not bypass it with HAL, LL, or raw register access unless the project policy explicitly allows that layer for the module.
 - Never mix HAL, LL, and raw register access within the same module without explicit architectural justification.
+- All BIST code must execute from RAM at base address `0x20000000`; if linker/startup/section placement support is missing, ask before modifying those files.
+- Do not use dynamic memory allocation (`malloc`, `calloc`, `realloc`, `free`, `new`, `delete`) in BIST code.
 - No blocking code, heap allocation, or heavy logic inside ISRs.
 - Every change to DMA, IRQ, clock, or Flash must document side effects.
 - If the exact STM32 family (e.g., H7, G4, U5, H5) is not specified, ask before writing any register-level code.
@@ -52,6 +82,8 @@ This repository provides instruction files for GitHub Copilot (VS Code), Cursor,
 ### BIST / Diagnostics Rules
 
 - Every BIST must be **deterministic**, **bounded in execution time**, and **diagnosable** (fault must be observable and reported, never silently ignored or retried).
+- Every BIST must execute from RAM at base address `0x20000000`; Flash execution is not acceptable unless the architecture is explicitly revised.
+- BIST code must not use dynamic memory allocation; use static storage or bounded stack usage only.
 - Clearly separate POST, PEST, and on-demand test logic. Do not merge their execution paths.
 - Intrusive tests (those that temporarily monopolize a resource or affect system state) must document: resource locked, duration upper bound, system exclusions, and recovery strategy.
 - Never mask, auto-clear, or silently retry a detected fault unless that behavior is explicitly specified in the architecture.
@@ -67,6 +99,8 @@ This repository provides instruction files for GitHub Copilot (VS Code), Cursor,
 ```bash
 mkdir -p .github
 curl -o .github/copilot-instructions.md https://raw.githubusercontent.com/AmineLtaiefST/BIST_AGENT/main/.github/copilot-instructions.md
+mkdir -p .github/agents
+curl -o .github/agents/stm32-bist-orchestrator.agent.md https://raw.githubusercontent.com/AmineLtaiefST/BIST_AGENT/main/.github/agents/stm32-bist-orchestrator.agent.md
 ```
 
 ### Cursor
@@ -92,8 +126,11 @@ These rules are designed to be merged with project-specific instructions. Add pr
 ## Project-Specific Guidelines
 
 - Target: STM32H743 rev Y, GCC 12.3, STM32CubeH7 v1.11
+- Product source of truth: internal product document and project driver library
 - HAL only, no LL or direct register access except in startup and fault handlers
 - BIST framework: custom BIST_Run() dispatcher, results in BIST_ResultTable[]
+- BIST execution: all BIST code runs from RAM at base address 0x20000000
+- Memory policy: no dynamic allocation in BIST code
 - Safety level: SIL 2 (IEC 61508)
 - Fault reaction: all BIST failures trigger system safe state via SafeState_Enter()
 ```
