@@ -216,11 +216,13 @@ If ENOB, SNR, THD, or stability is not acceptable, the first investigation path 
 
 Before implementing this BIST for a concrete STM32 project, the agent must ask for or verify:
 
-- Exact STM32 family and part number.
+- Exact STM32 product name, family, part number or internal product identifier.
+- Product publication status: published, internal, or unpublished.
 - Internal product document path, version, or relevant excerpt for unpublished products.
+- Public RM/DS reference for published products, or permission to search the web for official public documentation.
 - Product driver library path, version, and allowed ADC/DAC/timer/DMA APIs.
 - HAL, LL, or register access policy.
-- ADC instance and channel.
+- ADC IP name, ADC instance, and ADC channel to test.
 - DAC instance and channel.
 - Whether DAC and ADC are internally connected in this product.
 - Whether PA4 is used as the fallback shared analog path.

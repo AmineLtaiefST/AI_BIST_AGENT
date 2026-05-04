@@ -22,7 +22,9 @@ Before implementing:
 - If a simpler approach exists, say so. Push back when warranted.
 - If something is unclear, stop. Name what's confusing. Ask.
 - If the exact STM32 family is not specified, ask before writing register-level or clock/IRQ/DMA code.
+- Always ask for the exact STM32 product name, family, part number or internal product identifier, and whether the product is published or internal/unpublished before choosing documentation sources or hardware details.
 - For internal or unpublished STM32 products, locate or ask for the internal product document and product driver library before selecting ADC, DAC, timer, DMA, trigger, or analog routing details.
+- For ADC BISTs, always ask for the ADC IP name, ADC instance, and ADC channel under test before selecting drivers, triggers, DMA, or analog routing.
 - If the BIST architecture (POST/PEST/on-demand, safety level, fault reaction) is not described, ask before writing test logic.
 
 ## 2. Simplicity First

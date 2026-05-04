@@ -55,6 +55,8 @@ Use the workspace custom agent [`STM32 BIST Orchestrator`](.github/agents/stm32-
 
 The orchestrator must not implement hardware details until the selected pipeline, internal product document, driver APIs, BIST phase, reporting mechanism, fault reaction, and RAM execution mechanism are known.
 
+At the start of a workflow, the orchestrator must always ask for the exact STM32 product name/family/part number or internal product identifier, plus whether the product is published or internal/unpublished. For ADC BIST workflows, it must also ask which ADC IP/name/instance/channel must be tested.
+
 ---
 
 ## Rules Overview
@@ -70,6 +72,8 @@ The orchestrator must not implement hardware details until the selected pipeline
 
 - Never modify startup, linker, clock tree, watchdog, MPU/cache, option bytes, IRQ priorities, or low-power sequences without an explicit request and justification.
 - Never invent register names, bitfield values, reset states, peripheral instance names, trigger routes, DMA mappings, or initialization sequences.
+- Always ask for the exact STM32 product name, family, part number or internal product identifier, and whether the product is published or internal/unpublished before choosing documentation sources or hardware details.
+- For ADC BISTs, always ask for the ADC IP name, ADC instance, and ADC channel under test.
 - For published products, reference the correct RM/DS for the target family. For internal or unpublished products, treat the internal product document and project driver library as the source of truth.
 - Use the product driver library already present in the project. Do not bypass it with HAL, LL, or raw register access unless the project policy explicitly allows that layer for the module.
 - Never mix HAL, LL, and raw register access within the same module without explicit architectural justification.
@@ -126,6 +130,8 @@ These rules are designed to be merged with project-specific instructions. Add pr
 ## Project-Specific Guidelines
 
 - Target: STM32H743 rev Y, GCC 12.3, STM32CubeH7 v1.11
+- Product status: published | internal | unpublished
+- ADC under test: ADC IP/name/instance/channel, when applicable
 - Product source of truth: internal product document and project driver library
 - HAL only, no LL or direct register access except in startup and fault handlers
 - BIST framework: custom BIST_Run() dispatcher, results in BIST_ResultTable[]

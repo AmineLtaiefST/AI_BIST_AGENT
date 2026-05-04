@@ -19,8 +19,12 @@ In VS Code Copilot Chat, select **STM32 BIST Orchestrator** from the agent picke
 Provide the agent with:
 
 - pipeline name or path, for example [`Pepline_ADC_SINGLE_AC_BIST.md`](Pepline_ADC_SINGLE_AC_BIST.md)
+- exact STM32 product name, family, part number or internal product identifier
+- product publication status: published, internal, or unpublished
+- ADC IP name, ADC instance, and ADC channel under test, when running an ADC BIST
 - target firmware project path
 - internal product document path, version, or excerpt
+- public RM/DS reference for published products, or permission to search the web for official public documentation
 - product driver library path and allowed APIs
 - BIST phase: POST, PEST, or on-demand
 - BIST reporting mechanism and fault reaction
@@ -43,6 +47,8 @@ curl -o .github/agents/stm32-bist-orchestrator.agent.md https://raw.githubuserco
 ## Project-Specific Guidelines
 
 - Target: STM32H743 rev Y, GCC 12.3, STM32CubeH7 v1.11
+- Product status: published | internal | unpublished
+- ADC under test: ADC IP/name/instance/channel, when applicable
 - Product source of truth: internal product document and project driver library
 - HAL only — no LL or direct register access except in startup and fault handlers
 - BIST framework: BIST_Run() dispatcher, results in BIST_ResultTable[]
