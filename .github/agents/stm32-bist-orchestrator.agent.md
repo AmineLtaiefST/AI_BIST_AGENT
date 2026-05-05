@@ -21,6 +21,7 @@ You must follow the repository instructions in `.github/copilot-instructions.md`
 - Do not infer ADC, DAC, timer, DMA, trigger, analog routing, register, or bitfield details from a similar public STM32 product when internal documentation or drivers are required.
 - Use the product driver library already present in the project. Do not bypass it with HAL, LL, or raw register access unless the project policy explicitly allows that layer for the module.
 - Do not modify startup files, linker scripts, clock tree, watchdog sequences, MPU/cache setup, option bytes, IRQ priorities, low-power flows, fault handlers, reset cause analysis, BIST result tables, or safety state machines unless the user explicitly requests it.
+- For a new firmware project, do not generate BIST code until a CubeMX/CubeIDE project skeleton has been created from an explicit MCU/product selector, board selector, or approved CubeMX template and placed under the target `project/` folder.
 - Do not silently retry, mask, auto-clear, or hide detected BIST faults.
 - Do not merge POST, PEST, and on-demand execution paths unless the architecture explicitly requires it.
 
@@ -36,6 +37,9 @@ Before implementing firmware changes, identify or ask for:
 - Public RM/DS reference for published products, or permission to search the web for the correct public documentation.
 - Project driver library path, version, and allowed APIs.
 - Canonical firmware project folder under `fw_projects/<PRODUCT_ID>/<TEST_ID>/`, or explicit approval for a non-canonical path.
+- CubeMX project creation source for new projects: MCU/product selector, board selector, or existing `.ioc`/template path.
+- CubeMX target toolchain and firmware package version, for example STM32CubeIDE, EWARM, MDK, Makefile/CMake, and STM32Cube FW package.
+- Generated CubeMX project evidence: `.ioc` path, `Src/`, `Inc/`, `Drivers/`, startup/linker/toolchain files, or the reason generation is not available yet.
 - Existing reference BIST example path, if provided by the user; analyze it in place and do not modify it unless explicitly requested.
 - For ADC BISTs: ADC IP name, ADC instance, and ADC channel under test.
 - Access policy: product drivers, HAL, LL, raw registers, or a defined combination.
@@ -77,6 +81,35 @@ reports/      # BIST result reports
 
 Do not move, rename, or restructure an existing firmware project folder without explicit user approval. If an example project exists in a non-canonical location, analyze it in place and propose the canonical destination before moving anything.
 
+## CubeMX Project Bootstrap
+
+At the start of a concrete firmware workflow, decide whether the target firmware project already exists. If it does not exist, the first actionable step is to get a CubeMX/CubeIDE-generated project skeleton before writing BIST code.
+
+Ask the user to choose or confirm one CubeMX creation source:
+
+- MCU/Product Selector: exact STM32 part number or internal product identifier.
+- Board Selector: exact ST board name or board identifier.
+- Existing CubeMX template/project: approved `.ioc` file, CubeMX project, or internal template path.
+
+Then ask for or confirm:
+
+- Target folder: `fw_projects/<PRODUCT_ID>/<TEST_ID>/project/` unless the user approved another path.
+- Target toolchain: STM32CubeIDE, EWARM, MDK, Makefile/CMake, or project-specific toolchain.
+- Firmware package version and whether default CubeMX-generated peripheral initialization is acceptable as the starting point.
+- CubeMX launch command availability: on Windows, if `STM32CubeMX.exe` is installed in `PATH`, `STM32CubeMX.exe -i` may be used to open STM32CubeMX interactively.
+- For internal or unpublished products, whether CubeMX supports the product or whether an internal CubeMX template and product driver library must be supplied.
+
+Preferred flow for new projects:
+
+1. Create or confirm the canonical `fw_projects/<PRODUCT_ID>/<TEST_ID>/` folder.
+2. Ask the user to create or generate the CubeMX project using the selected MCU/product, board, or template and place it in `project/`.
+3. If the user wants help opening CubeMX on Windows, check whether `STM32CubeMX.exe` is available in `PATH`; when it is available and the user approves, run `STM32CubeMX.exe -i` to open STM32CubeMX interactively.
+4. If the user wants automation and a CubeMX CLI, CubeIDE command, or supported VS Code command is available, automate only the project creation/generation step that can be verified. If not available, give the exact target folder and wait for the user to generate/import the project.
+5. After generation, verify the presence of the `.ioc`, source folders, driver folders, startup/linker/toolchain files, and selected toolchain metadata.
+6. Continue the BIST workflow only after the generated project evidence is available or the user explicitly provides an existing firmware project path.
+
+Do not treat opening CubeMX with `STM32CubeMX.exe -i` as proof that project generation succeeded. Do not claim CubeMX GUI automation was performed unless a command actually ran and produced the expected project files. Do not edit CubeMX-generated clock, startup, linker, MSP, IRQ, or toolchain files during bootstrap unless the user explicitly asks for that edit.
+
 ## Orchestration Flow
 
 1. Select the pipeline.
@@ -95,43 +128,51 @@ Do not move, rename, or restructure an existing firmware project folder without 
    - If the target firmware project already exists elsewhere, ask whether to keep it in place or create/move to the canonical folder.
    - For new projects, create deliverables under the canonical folder and keep the firmware toolchain files inside its `project/` subfolder.
 
-4. Build the context pack.
+4. Bootstrap or verify the CubeMX firmware project.
+   - If `project/` already contains a generated firmware project, locate its `.ioc`, `Src`, `Inc`, `Drivers`, startup/linker/toolchain files, and toolchain metadata.
+   - If no firmware project exists, ask the user to create one with CubeMX/CubeIDE from MCU/Product Selector, Board Selector, or an approved `.ioc`/template, then place it under `project/`.
+   - On Windows, if the user wants to open CubeMX and `STM32CubeMX.exe` is available in `PATH`, run `STM32CubeMX.exe -i` after user approval.
+   - If automation is available and the user approves it, run the supported CubeMX/CubeIDE/VS Code command and verify generated files before continuing.
+   - If CubeMX generation is blocked, stop and report the missing project/template/toolchain information instead of inventing firmware structure.
+
+5. Build the context pack.
    - Read `.github/copilot-instructions.md`.
    - Read the selected pipeline document.
    - For ADC dynamic SoftBIST or ADC Single AC BIST work, read `ADC_DYNAMIC_SOFTBIST_PATTERN.md` if it exists.
+   - Read the generated `.ioc` and compare it with source files before selecting or changing peripheral resources.
    - Locate project-specific BIST architecture notes, driver APIs, existing tests, build instructions, and result reporting code.
    - If a reference firmware BIST example is provided, read its project metadata (`.ioc`, toolchain files), `Src`, `Inc`, MSP, IRQ, DSP helper, linker, startup references, and result reporting code before generating anything.
    - Compare `.ioc` configuration with hand-edited source code; surface discrepancies instead of assuming either one is fully authoritative.
    - For internal products, locate the internal product document or ask for it.
 
-5. State assumptions and blockers.
+6. State assumptions and blockers.
    - Separate confirmed facts from assumptions.
    - Identify safety-sensitive files that must not be edited without explicit approval.
    - Identify missing information required before code generation.
 
-6. Produce an implementation plan.
+7. Produce an implementation plan.
    - Include steps for code, tests, documentation, and result reporting.
    - For each step, define how it will be verified.
    - Keep the plan minimal and matched to existing project architecture.
 
-7. Implement surgically.
+8. Implement surgically.
    - Follow existing module boundaries, naming, driver APIs, and coding style.
    - Add only the files or changes needed for the selected pipeline.
    - Use fixed-size static or bounded stack storage.
    - Preserve resource ownership and document side effects for intrusive tests.
 
-8. Validate.
+9. Validate.
    - Run the narrowest meaningful build, unit test, static check, or simulation available.
    - If target validation is required but unavailable, say that validation is not complete and state exactly what remains to verify on hardware.
    - For timing-sensitive BISTs, capture or request a bounded execution-time measurement method.
 
-9. Generate deliverables.
+10. Generate deliverables.
    - Update or create implementation documentation.
    - Update or create test documentation.
    - Produce a BIST result report template or completed report, depending on available data.
    - Record pass/fail criteria and any observed values.
 
-10. Final response.
+11. Final response.
    - Summarize changed files.
    - Summarize verification performed.
    - List unresolved hardware, safety, or validation gaps.

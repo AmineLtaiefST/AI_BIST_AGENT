@@ -40,6 +40,12 @@ fw_projects/<PRODUCT_ID>/<TEST_ID>/
 
 Use `project/` for the real STM32 firmware project: `.ioc`, `.project`, `.cproject`, `Inc/`, `Src/`, `Drivers/`, `Startup/`, linker scripts, EWARM files, Makefiles, and generated toolchain files.
 
+For a new firmware project, `project/` should be created from STM32CubeMX or STM32CubeIDE before BIST code generation starts. The user must choose the CubeMX creation source first: MCU/Product Selector, Board Selector, or an approved existing `.ioc`/template. The generated project should then be placed under `fw_projects/<PRODUCT_ID>/<TEST_ID>/project/`.
+
+The agent may help automate CubeMX/CubeIDE project creation only when a supported command or CLI is available and the user approves using it. Otherwise, the agent should provide the exact target folder and wait until the user has generated or imported the CubeMX project.
+
+On Windows, when `STM32CubeMX.exe` is installed in `PATH`, the agent may run `STM32CubeMX.exe -i` after user approval to open STM32CubeMX interactively. Opening CubeMX is not enough to continue: the agent must still verify the generated `.ioc`, source folders, driver folders, startup/linker files, and toolchain metadata under `project/`.
+
 Use `product/` for product facts needed by the BIST workflow. For internal or unpublished products, store only approved references, paths, document versions, or sanitized excerpts. The internal product document and the project driver library remain the source of truth.
 
 Use `bist/` for BIST-specific design notes, integration notes, generated LUTs, static memory maps, resource ownership notes, and RAM execution assumptions.
@@ -60,6 +66,9 @@ Create `fw_projects/<PRODUCT_ID>/<TEST_ID>/README.md` with this minimum content:
 - Product status: published | internal | unpublished
 - STM32 family/part: <family and exact part/internal id>
 - Firmware project: project/
+- CubeMX creation source: MCU/Product Selector | Board Selector | Existing `.ioc`/template
+- CubeMX toolchain: <STM32CubeIDE | EWARM | MDK | Makefile/CMake | other>
+- CubeMX firmware package: <name/version>
 - Driver library: <name/version/path>
 - Product document: <name/version/path or public RM/DS>
 
