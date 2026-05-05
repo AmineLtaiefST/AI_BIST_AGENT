@@ -40,6 +40,24 @@ This repository provides instruction files for GitHub Copilot (VS Code), Cursor,
 |----------|---------|
 | [`Pepline_ADC_SINGLE_AC_BIST.md`](Pepline_ADC_SINGLE_AC_BIST.md) | ADC dynamic performance BIST using DAC sine generation, synchronized ADC capture, DMA, CMSIS-DSP FFT, SNR, THD, SINAD, and ENOB. |
 
+## Reference Patterns
+
+| Pattern | Purpose |
+|---------|---------|
+| [`ADC_DYNAMIC_SOFTBIST_PATTERN.md`](ADC_DYNAMIC_SOFTBIST_PATTERN.md) | Lightweight extraction of the former ADC SoftBIST reference project: BIST flow, resources, SRAM/ATE result interface, DSP metrics, and generation guardrails. |
+
+---
+
+## Firmware Project Architecture
+
+Concrete firmware BIST projects should be organized by product and by test under:
+
+```text
+fw_projects/<PRODUCT_ID>/<TEST_ID>/
+```
+
+See [`FW_PROJECT_ARCHITECTURE.md`](FW_PROJECT_ARCHITECTURE.md) for the canonical layout, naming rules, metadata template, and handling of project-specific firmware folders.
+
 ---
 
 ## BIST Orchestrator Agent

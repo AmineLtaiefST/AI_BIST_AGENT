@@ -1,0 +1,96 @@
+# Firmware Project Architecture
+
+Modified by Amine LTAIEF.
+
+This document defines the folder convention for concrete STM32 BIST firmware projects handled by the agent. The goal is to keep each firmware project easy to identify by product and by BIST test, without mixing project files, product documentation, validation artifacts, and result reports at repository root.
+
+## Canonical Path
+
+Use this path for every concrete firmware BIST project:
+
+```text
+fw_projects/<PRODUCT_ID>/<TEST_ID>/
+```
+
+`<PRODUCT_ID>` is the exact STM32 product, part number, or internal product identifier normalized for a folder name. `<TEST_ID>` is the BIST pipeline or test name normalized for a folder name.
+
+Use uppercase letters, digits, and underscores. Avoid spaces and accents in folder names because STM32 toolchains, scripts, and build systems are easier to keep portable with simple paths.
+
+Examples:
+
+```text
+fw_projects/STM32G474VETX/ADC_SINGLE_AC_BIST/
+fw_projects/<INTERNAL_PRODUCT_ID>/ADC_SINGLE_AC_BIST/
+fw_projects/<INTERNAL_PRODUCT_ID>/RAM_BIST/
+```
+
+## Folder Layout
+
+Each `<TEST_ID>` folder should use this structure:
+
+```text
+fw_projects/<PRODUCT_ID>/<TEST_ID>/
+  README.md
+  project/
+  product/
+  bist/
+  validation/
+  reports/
+```
+
+Use `project/` for the real STM32 firmware project: `.ioc`, `.project`, `.cproject`, `Inc/`, `Src/`, `Drivers/`, `Startup/`, linker scripts, EWARM files, Makefiles, and generated toolchain files.
+
+Use `product/` for product facts needed by the BIST workflow. For internal or unpublished products, store only approved references, paths, document versions, or sanitized excerpts. The internal product document and the project driver library remain the source of truth.
+
+Use `bist/` for BIST-specific design notes, integration notes, generated LUTs, static memory maps, resource ownership notes, and RAM execution assumptions.
+
+Use `validation/` for build commands, simulation logs, target measurement notes, GPIO/SWO timing captures, and fault-injection observations.
+
+Use `reports/` for BIST result reports produced from the pipeline report template.
+
+## Project README Template
+
+Create `fw_projects/<PRODUCT_ID>/<TEST_ID>/README.md` with this minimum content:
+
+```markdown
+# <PRODUCT_ID> - <TEST_ID>
+
+## Target
+- Product: <exact product, part number, or internal id>
+- Product status: published | internal | unpublished
+- STM32 family/part: <family and exact part/internal id>
+- Firmware project: project/
+- Driver library: <name/version/path>
+- Product document: <name/version/path or public RM/DS>
+
+## BIST
+- Pipeline: <pipeline document path>
+- Phase: POST | PEST | on-demand
+- Fault reaction: <reporting and system reaction>
+- RAM execution mechanism: <section/linker/startup mechanism>
+- Static memory budget: <buffers and sizes>
+
+## ADC Scope
+- ADC IP/name: <value or N/A>
+- ADC instance: <value or N/A>
+- ADC channel: <value or N/A>
+- DAC/timer/DMA resources: <values or TBD>
+
+## Verification
+- Build command: <command or TBD>
+- Target validation: done | not done
+- Timing validation: done | not done
+- Last report: reports/<report file or TBD>
+```
+
+## Handling Reference Examples
+
+Do not keep bulky ad hoc firmware examples at the repository root once their useful behavior has been extracted. First capture the reusable behavior in a lightweight pattern or report document, then archive or delete the original reference project only with explicit user approval.
+
+For ADC dynamic SoftBIST generation, the extracted reusable reference is:
+
+```text
+ADC_DYNAMIC_SOFTBIST_PATTERN.md
+```
+
+Concrete firmware projects should still be created under `fw_projects/<PRODUCT_ID>/<TEST_ID>/project/` with product-specific source code, drivers, toolchain files, validation logs, and reports.
