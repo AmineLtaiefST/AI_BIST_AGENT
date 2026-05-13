@@ -124,17 +124,20 @@ Before using a fixed SRAM address, verify from the linker/map that it does not o
 
 ## Integration Checklist For A New Project
 
-Before letting the agent implement this BIST in a target firmware project, provide or confirm:
+Before letting the agent implement this BIST in a target firmware project, provide or confirm only what cannot be discovered from the approved product template/project, `.ioc`, product document, generated source, and driver library. If a functional product template already exists, the agent must inspect it first and must not ask for CubeMX project creation. If HAL ADC/DAC/TIM/DMA calls are absent, the agent must ask the focused resource questions below before discussing CubeMX regeneration or manual integration.
+
+Provide or confirm:
 
 - Product name/family/part number or internal product identifier.
 - Product status: published, internal, or unpublished.
 - Public RM/DS for published products, or internal product document for internal/unpublished products.
 - Firmware project path under `fw_projects/<PRODUCT_ID>/<TEST_ID>/project/`.
 - Driver library path/version and allowed API layer: product driver, HAL, LL, raw register access, or defined combination.
-- ADC IP/name, ADC instance, ADC channel, ADC pin or internal route.
-- DAC instance/channel and analog connection to the ADC input.
-- Timer trigger resources, trigger delay, and expected ADC:DAC timing relationship.
-- DMA resources for DAC and, if used, ADC capture.
+- ADC IP/name, ADC instance, ADC channel, ADC pin or internal route, and ADC mode: single-ended or differential.
+- Second ADC channel if differential mode is selected.
+- DAC instance/channel and analog connection to the ADC input: internal route, external connection, shared pin, or product-specific analog routing.
+- Timer trigger resources, trigger delay, and expected ADC:DAC timing relationship. Prefer one common timer with two deterministic output-compare events/channels: one for DAC update and one phase-shifted event for ADC conversion after DAC settling.
+- DMA resources for DAC and, if used, ADC capture. The agent must inspect product documentation, `.ioc`, generated source/MSP, DMAMUX/DMA mapping, and driver APIs before asking about DMA request/channel/stream choices.
 - ADC sampling time, target sample frequency, DAC settling requirement, and expected FFT fundamental bin.
 - BIST phase: POST, PEST, or on-demand.
 - Fault reaction and result reporting mechanism.

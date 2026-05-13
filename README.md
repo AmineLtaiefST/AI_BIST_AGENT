@@ -71,9 +71,19 @@ Use the workspace custom agent [`STM32 BIST Orchestrator`](.github/agents/stm32-
 - update implementation documentation
 - produce a BIST result report
 
-The orchestrator must not implement hardware details until the selected pipeline, internal product document, driver APIs, BIST phase, reporting mechanism, fault reaction, and RAM execution mechanism are known.
+The orchestrator must not implement hardware details until the selected pipeline, product/template evidence, driver APIs, BIST phase, reporting mechanism, fault reaction, and RAM execution mechanism are known.
 
-At the start of a workflow, the orchestrator must always ask for the exact STM32 product name/family/part number or internal product identifier, plus whether the product is published or internal/unpublished. For ADC BIST workflows, it must also ask which ADC IP/name/instance/channel must be tested.
+At the start of a workflow, the orchestrator must always ask for or confirm the exact STM32 product name/family/part number or internal product identifier, plus whether the product is published or internal/unpublished. If a functional product template or generated firmware project already exists, it must inspect that template first and ask only for missing or ambiguous hardware facts.
+
+The orchestrator asks missing information one question at a time by default. It should first state the facts already proven by workspace evidence, then ask the single next highest-priority question and wait for the answer. A full open-question checklist is only appropriate when the user explicitly asks for all open questions or batch mode.
+
+For ADC BIST workflows on an existing template, the focused question order is:
+
+1. ADC IP/name, ADC instance, channel, and mode: single-ended or differential. For differential mode, identify the second channel.
+2. DAC instance/channel and DAC-to-ADC connection: internal route, external connection, shared pin, or product-specific analog routing.
+3. Synchronization timer: prefer one common timer with two output-compare events/channels, one for DAC update and one phase-shifted event for ADC conversion.
+4. DMA mapping: inspect product docs, `.ioc`, generated source, DMAMUX/DMA tables, and driver library first; ask only if unclear.
+5. CubeMX: do not ask to create a new CubeMX project when a functional product template already exists.
 
 ---
 
@@ -91,7 +101,7 @@ At the start of a workflow, the orchestrator must always ask for the exact STM32
 - Never modify startup, linker, clock tree, watchdog, MPU/cache, option bytes, IRQ priorities, or low-power sequences without an explicit request and justification.
 - Never invent register names, bitfield values, reset states, peripheral instance names, trigger routes, DMA mappings, or initialization sequences.
 - Always ask for the exact STM32 product name, family, part number or internal product identifier, and whether the product is published or internal/unpublished before choosing documentation sources or hardware details.
-- For ADC BISTs, always ask for the ADC IP name, ADC instance, and ADC channel under test.
+- For ADC BISTs, inspect the existing product template/project first, then ask only for missing ADC/DAC/timer/DMA facts.
 - For published products, reference the correct RM/DS for the target family. For internal or unpublished products, treat the internal product document and project driver library as the source of truth.
 - Use the product driver library already present in the project. Do not bypass it with HAL, LL, or raw register access unless the project policy explicitly allows that layer for the module.
 - Never mix HAL, LL, and raw register access within the same module without explicit architectural justification.

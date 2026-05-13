@@ -21,7 +21,11 @@ Provide the agent with:
 - pipeline name or path, for example [`Pepline_ADC_SINGLE_AC_BIST.md`](Pepline_ADC_SINGLE_AC_BIST.md)
 - exact STM32 product name, family, part number or internal product identifier
 - product publication status: published, internal, or unpublished
-- ADC IP name, ADC instance, and ADC channel under test, when running an ADC BIST
+- approved product template or generated firmware project path, if one already exists
+- ADC IP name, ADC instance, ADC channel under test, and single-ended/differential mode, when running an ADC BIST
+- second ADC channel, when running an ADC BIST in differential mode
+- DAC instance/channel and DAC-to-ADC connection path, when running an ADC dynamic BIST
+- synchronization timer preference, when it is not already clear from the product template or documentation
 - target firmware project path
 - internal product document path, version, or excerpt
 - public RM/DS reference for published products, or permission to search the web for official public documentation
@@ -31,6 +35,8 @@ Provide the agent with:
 - validation target: unit test, simulation, build, or hardware run
 
 The orchestrator will collect missing context, generate code/tests/docs only when enough information is available, run available verification, and produce a result report.
+
+When a functional product template or generated firmware project already exists, the orchestrator must inspect it first. It should not ask you to create a new CubeMX project unless the template is absent, incomplete, contradictory, or you explicitly choose regeneration. For ADC dynamic BISTs, it must inspect product docs, `.ioc`, generated source, DMAMUX/DMA mapping, and driver APIs before asking about DMA channels.
 
 ## Use the same guidelines in another STM32 project
 

@@ -16,6 +16,8 @@ Behavioral guidelines for AI coding agents working on STM32 embedded firmware, s
 
 **Don't assume. Don't hide confusion. Surface tradeoffs.**
 
+When information is missing, ask one question at a time by default. Summarize only the facts already proven by workspace evidence, then ask the single next highest-priority question and wait for the user's answer before asking the next one. Do not present a full open-question checklist unless the user explicitly asks for all open questions or batch mode. Do not re-ask facts already confirmed by README/resource maps, `.ioc`, generated metadata, validation notes, or prior user answers unless they conflict.
+
 Before implementing:
 - State your assumptions explicitly. If uncertain, ask.
 - If multiple interpretations exist, present them — don't pick silently.
@@ -24,8 +26,22 @@ Before implementing:
 - If the exact STM32 family is not specified, ask before writing register-level or clock/IRQ/DMA code.
 - Always ask for the exact STM32 product name, family, part number or internal product identifier, and whether the product is published or internal/unpublished before choosing documentation sources or hardware details.
 - For internal or unpublished STM32 products, locate or ask for the internal product document and product driver library before selecting ADC, DAC, timer, DMA, trigger, or analog routing details.
-- For ADC BISTs, always ask for the ADC IP name, ADC instance, and ADC channel under test before selecting drivers, triggers, DMA, or analog routing.
+- For ADC BISTs, first inspect the existing product template/project, `.ioc`, product document, and driver library; then ask only for ADC/DAC/timer/DMA facts that are still missing or ambiguous.
 - If the BIST architecture (POST/PEST/on-demand, safety level, fault reaction) is not described, ask before writing test logic.
+
+### Existing Product Template Workflow
+
+When a functional product template or generated firmware project already exists, use it as the starting point. Do not ask the user to create a new CubeMX project unless the template is missing, incomplete, inconsistent, or the user explicitly chooses regeneration.
+
+If the template already contains `main.c`, do not ask to create another `main.c`. Locate the owner core's existing `Core/Src/main.c` and use the project's established integration points. If ADC/DAC/timer/DMA initialization is missing, treat it as missing resource knowledge first: extract what is known from the template, then ask the focused ADC/DAC/timer/DMA questions below. Do not describe this as a missing `main.c` problem and do not jump directly to CubeMX project creation.
+
+For ADC BIST work on an existing template, the focused question order is:
+
+1. ADC: ask or confirm ADC IP/name, ADC instance, channel, and mode: single-ended or differential. For differential mode, ask or confirm the second channel.
+2. DAC: ask or confirm DAC instance/channel and how it is connected to the ADC path: internal route, external connection, shared pin, or product-specific analog routing.
+3. Timer synchronization: prefer one common timer time base. Use two deterministic timer output-compare events/channels when supported: one for DAC update and one phase-shifted event for ADC conversion after DAC settling. If the timer or trigger route is unclear, ask.
+4. DMA: inspect the product document, `.ioc`, generated source, DMAMUX/DMA mapping, and driver library before asking. Ask only when the DMA request/channel/stream choice is unclear or conflicting.
+5. CubeMX: if a selected product template is functional, do not request CubeMX project creation. Only discuss CubeMX regeneration after the missing ADC/DAC/timer/DMA facts are identified and the existing template cannot be completed safely from its current evidence.
 
 ## 2. Simplicity First
 

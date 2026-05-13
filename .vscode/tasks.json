@@ -1,0 +1,17 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Validate ADC_SINGLE_AC_BIST signal simulation",
+			"detail": "Host-only signal simulation; this does not run STM32 firmware, timer/DMA, RAM placement, or target hardware validation.",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"fw_projects/STM32H755ZI/ADC_SINGLE_AC_BIST/validation/adc_single_ac_bist_sim.py"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "test"
+		}
+	]
+}

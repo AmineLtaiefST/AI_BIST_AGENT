@@ -42,6 +42,12 @@ Use `project/` for the real STM32 firmware project: `.ioc`, `.project`, `.cproje
 
 For a new firmware project, `project/` should be created from STM32CubeMX or STM32CubeIDE before BIST code generation starts. The user must choose the CubeMX creation source first: MCU/Product Selector, Board Selector, or an approved existing `.ioc`/template. The generated project should then be placed under `fw_projects/<PRODUCT_ID>/<TEST_ID>/project/`.
 
+If a functional product template or generated firmware project already exists, the agent must inspect and use it first instead of asking the user to create a new CubeMX project. The agent should verify the template evidence: `.ioc`, source folders, include folders, drivers, startup/linker/toolchain metadata, selected core ownership, and existing peripheral initialization. CubeMX creation or regeneration should be requested only when the template is absent, incomplete, contradictory, or explicitly selected by the user.
+
+If the template already contains `Core/Src/main.c`, the agent must not ask to create a new `main.c`. It should choose the owner core, use the existing file or project extension points, and treat missing ADC/DAC/timer/DMA setup as missing resource knowledge first. The agent must ask the focused ADC/DAC/timer/DMA questions after inspecting the template before it discusses CubeMX regeneration or manual integration.
+
+For ADC dynamic BISTs on an existing template, the agent should ask only focused missing questions after inspection: ADC instance/channel/mode, differential second channel when applicable, DAC instance/channel and connection path, synchronization timer/OC trigger strategy when unclear, and DMA mapping only when product documentation, `.ioc`, generated source, DMAMUX/DMA tables, and driver APIs do not provide a safe answer.
+
 The agent may help automate CubeMX/CubeIDE project creation only when a supported command or CLI is available and the user approves using it. Otherwise, the agent should provide the exact target folder and wait until the user has generated or imported the CubeMX project.
 
 On Windows, when `STM32CubeMX.exe` is installed in `PATH`, the agent may run `STM32CubeMX.exe -i` after user approval to open STM32CubeMX interactively. Opening CubeMX is not enough to continue: the agent must still verify the generated `.ioc`, source folders, driver folders, startup/linker files, and toolchain metadata under `project/`.

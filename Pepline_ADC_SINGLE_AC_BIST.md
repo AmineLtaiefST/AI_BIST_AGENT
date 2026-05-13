@@ -214,7 +214,9 @@ If ENOB, SNR, THD, or stability is not acceptable, the first investigation path 
 
 ## Implementation Inputs Required Before Coding
 
-Before implementing this BIST for a concrete STM32 project, the agent must ask for or verify:
+Before implementing this BIST for a concrete STM32 project, the agent must inspect the existing product template/project, `.ioc`, product document, and driver library first. It must ask only for facts that remain missing, ambiguous, or conflicting after that inspection.
+
+Required facts are:
 
 - Exact STM32 product name, family, part number or internal product identifier.
 - Product publication status: published, internal, or unpublished.
@@ -222,12 +224,13 @@ Before implementing this BIST for a concrete STM32 project, the agent must ask f
 - Public RM/DS reference for published products, or permission to search the web for official public documentation.
 - Product driver library path, version, and allowed ADC/DAC/timer/DMA APIs.
 - HAL, LL, or register access policy.
-- ADC IP name, ADC instance, and ADC channel to test.
+- ADC IP name, ADC instance, ADC channel to test, and ADC mode: single-ended or differential.
+- Second ADC channel if differential mode is selected.
 - DAC instance and channel.
-- Whether DAC and ADC are internally connected in this product.
+- DAC-to-ADC connection path: internal route, external connection, shared pin, or product-specific analog routing.
 - Whether PA4 is used as the fallback shared analog path.
-- Timer instance and available trigger outputs or compare channels.
-- DMA channels or streams reserved for DAC and ADC.
+- Timer instance and available trigger outputs or compare channels. Prefer one common timer with two deterministic output-compare events/channels: one for DAC update and one phase-shifted event for ADC conversion after DAC settling.
+- DMA requests/channels/streams reserved for DAC and ADC. The agent must inspect product documentation, `.ioc`, generated source/MSP, DMAMUX/DMA mapping, and driver APIs before asking.
 - ADC sampling time and target sampling frequency.
 - DAC settling time requirement.
 - BIST phase: POST, PEST, or on-demand.
